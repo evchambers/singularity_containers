@@ -1,0 +1,77 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%runscript
+echo "Running..."
+
+%environment
+R_VERSION=4.3.0
+export R_VERSION
+R_CONFIG_DIR=/etc/R/
+export LC_ALL=C
+export PATH=$PATH
+export TZ='UK/London'
+
+%labels
+Author Emily V Chambers
+Version v1.0
+R_Version 4.3.0
+build_date 2023 Apr 20
+R_bioconductor True
+
+%apprun R
+exec R "$@"
+
+%apprun Rscript
+exec Rscript "$@"
+
+%runscript
+echo "Running singularity R v4.3/Seurat v5"
+echo "Singularity container built by Sheffield Bioinformatics Core"
+echo "Maintainer - e.v.chambers@sheffield.ac.uk"
+exec R "$@"
+
+
+%post
+  apt-get update
+  export DEBIAN_FRONTEND=noninteractive
+  ln -fs /usr/share/zoneinfo/UK/London /etc/localtime
+  apt-get install -y build-essential
+
+# Install R
+     apt-get install -y --no-install-recommends software-properties-common dirmngr  wget uuid-runtime
+     wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | \
+       tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+     add-apt-repository \
+       "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
+     apt-get install -y --no-install-recommends \
+     r-base=${R_VERSION}* \
+     r-base-dev=${R_VERSION}* \
+     libcurl4-openssl-dev \
+     libssl-dev \
+     libxml2-dev \
+     libfontconfig1-dev \
+     libhdf5-dev \
+     libfontconfig1-dev \
+     apt-transport-https \
+     libharfbuzz-dev \
+     libfribidi-dev \
+     libfreetype6-dev \
+     libpng-dev \
+     libtiff5-dev \
+     libjpeg-dev
+     
+     apt-get update
+  
+  R --version
+  
+  # installing packages from cran
+  
+  R --slave -e 'install.packages("xfun", quietly =T)'
+  R --slave -e 'install.packages("tidyverse", quietly =T)'
+  R --slave -e 'install.packages("remotes")'
+  R --slave -e 'install.packages("R.utils")'
+  R --slave -e 'install.packages("RANN")'
+  R --slave -e 'install.packages("ggridges")'
+  R --slave -e 'remotes::install_github("satijalab/seurat", "seurat5")'
+  R --slave -e 'remotes::install_github("satijalab/seurat-wrappers", "seurat5")'
